@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from functools import wraps
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
-
 app = Flask(__name__)
 app.secret_key = 'pea2569-xK9mQ'
 
@@ -251,16 +250,43 @@ def login_required(f):
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+
         return f(*args, **kwargs)
+
     return decorated
 
 
-# กำหนดชุดข้อมูล default ของแต่ละหน้าไว้ในที่เดียว เพื่อให้ดูแลง่ายเมื่อมีหน้าเพิ่มในอนาคต
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+
+        if session.get('role') != 'admin':
+            return "Permission Denied", 403
+
+        return f(*args, **kwargs)
+
+    return decorated
+
+
 PAGE_DEFAULTS = {
     'spec_page3': DEFAULT_DATA_PAGE3,
     'spec_page4': DEFAULT_DATA_PAGE4,
     'spec_page5': DEFAULT_DATA_PAGE5,
 }
+
+ADMIN_ONLY_FIELDS = {
+    'main': [],
+    'report': [],
+    'spec_page1': [],
+    'spec_page2': [],
+    'spec_page3': [],
+    'spec_page4': [],
+    'spec_page5': []
+}
+
 
 
 def get_form_data(page_key):
@@ -290,13 +316,11 @@ def get_form_data(page_key):
 
 
 # ---------- Auth ----------
-
 @app.route('/')
 @app.route('/login')
 def login():
     session.clear()
     return render_template('login.html')
-
 
 @app.route('/auth/login', methods=['POST'])
 def auth_login():
@@ -305,7 +329,8 @@ def auth_login():
 
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id, name, password FROM users WHERE username = %s", (username,))
+    cursor.execute(
+    "SELECT id, name, password, role FROM users WHERE username = %s",(username,))
     user = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -314,10 +339,10 @@ def auth_login():
         session['user_id'] = user['id']
         session['username'] = username
         session['name'] = user['name']
+        session['role'] = user['role']
         return redirect(url_for('select_category'))
 
     return render_template('login.html', error='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'), 401
-
 
 @app.route('/register')
 def register_page():
@@ -343,9 +368,20 @@ def auth_register():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO users (name, username, password, phone, email) VALUES (%s, %s, %s, %s, %s)",
-            (name, username, generate_password_hash(password), phone, email)
-        )
+    """
+    INSERT INTO users
+    (name, username, password, phone, email, role)
+    VALUES (%s,%s,%s,%s,%s,%s)
+    """,
+    (
+        name,
+        username,
+        generate_password_hash(password),
+        phone,
+        email,
+        "user"
+    )
+)
         conn.commit()
     except mysql.connector.IntegrityError:
         cursor.close()
@@ -375,14 +411,24 @@ def select_category():
 @login_required
 def main():
     data = get_form_data('main')
-    return render_template('index.html', data=data, username=session.get('name'))
-
+    return render_template(
+        'index.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+        
+    )
 
 @app.route('/report')
 @login_required
 def report():
     data = get_form_data('report')
-    return render_template('report.html', data=data, username=session.get('name'))
+    return render_template(
+        'report.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 
 @app.route('/spec-page-1')
@@ -390,35 +436,57 @@ def report():
 @login_required
 def spec_page_1():
     data = get_form_data('spec_page1')
-    return render_template('spec_page1.html', data=data, username=session.get('name'))
-
+    return render_template(
+        'spec_page1.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 @app.route('/spec-page-2')
 @login_required
 def spec_page_2():
     data = get_form_data('spec_page2')
-    return render_template('spec_page2.html', data=data, username=session.get('name'))
+    return render_template(
+        'spec_page2.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 
 @app.route('/spec-page-3')
 @login_required
 def spec_page_3():
     data = get_form_data('spec_page3')
-    return render_template('spec_page3.html', data=data, username=session.get('name'))
-
+    return render_template(
+        'spec_page3.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 @app.route('/spec-page-4')
 @login_required
 def spec_page_4():
     data = get_form_data('spec_page4')
-    return render_template('spec_page4.html', data=data, username=session.get('name'))
-
+    return render_template(
+        'spec_page4.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 @app.route('/spec-page-5')
 @login_required
 def spec_page_5():
     data = get_form_data('spec_page5')
-    return render_template('spec_page5.html', data=data, username=session.get('name'))
+    return render_template(
+        'spec_page5.html',
+        data=data,
+        username=session.get('name'),
+        role=session.get('role')
+    )
 
 
 @app.route('/edit-form')
@@ -429,23 +497,47 @@ def edit_form():
         page_key = 'main'
 
     data = get_form_data(page_key)
-    return render_template('edit_form.html', data=data, username=session.get('name'), page_key=page_key)
-
+    return render_template(
+    'edit_form.html',
+    data=data,
+    username=session.get('name'),
+    page_key=page_key,
+    role=session.get('role')
+)
 
 @app.route('/api/save-form', methods=['POST'])
 @login_required
 def save_form():
+
     payload = request.json or {}
+
     page_key = payload.pop('_page_key', 'main')
+
     if page_key not in VALID_PAGES:
         page_key = 'main'
 
+    # ข้อมูลเดิม
+    old_data = get_form_data(page_key)
+
+    # ถ้าไม่ใช่ Admin จะห้ามแก้ไขฟิลด์ที่กำหนด
+    if session.get('role') != 'admin':
+
+        for field in ADMIN_ONLY_FIELDS.get(page_key, []):
+
+            if field in old_data:
+                payload[field] = old_data[field]
+
     store = session.get('form_store', {})
     store[page_key] = payload
+
     session['form_store'] = store
     session.modified = True
 
-    return jsonify({'status': 'success', 'message': 'บันทึกแล้ว', 'page_key': page_key})
+    return jsonify({
+        'status': 'success',
+        'message': 'บันทึกแล้ว',
+        'page_key': page_key
+    })
 
 
 if __name__ == '__main__':
