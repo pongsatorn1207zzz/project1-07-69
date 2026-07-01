@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+{% include 'spec_page1.html' %}
+
+<div style="page-break-after:always;"></div>
+
+{% include 'spec_page2.html' %}
+
+</body>
+</html>

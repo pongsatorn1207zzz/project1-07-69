@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>เลือกประเภทเอกสาร</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .select-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 24px;
+            background:
+                radial-gradient(circle at top left, rgba(119, 79, 168, 0.15), transparent 22%),
+                radial-gradient(circle at bottom right, rgba(186, 85, 211, 0.12), transparent 25%),
+                linear-gradient(180deg, #f8f6fc 0%, #f0ebe8 50%, #e8dfe0 100%);
+        }
+
+        .select-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .select-header img {
+            width: 90px;
+            height: auto;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
+            margin-bottom: 14px;
+        }
+
+        .select-header .org-name {
+            font-family: THSarabunBold;
+            font-size: 20pt;
+            color: #6f24a6;
+            margin-bottom: 4px;
+        }
+
+        .select-header .page-title {
+            font-family: THSarabunBold;
+            font-size: 26pt;
+            color: #2d1b3d;
+            background: linear-gradient(135deg, #6f24a6 0%, #9b4fb3 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .select-header .user-greeting {
+            font-size: 15pt;
+            color: #5a5a6e;
+            margin-top: 6px;
+        }
+
+        /* ===== GRID การ์ด ===== */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            text-decoration: none;
+            color: #2d1b3d;
+            border: 1.5px solid rgba(111, 36, 166, 0.1);
+            box-shadow: 0 8px 28px rgba(61, 28, 97, 0.1);
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            border-radius: 20px 20px 0 0;
+            background: var(--card-accent, linear-gradient(90deg, #6f24a6, #9b4fb3));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 48px rgba(61, 28, 97, 0.18);
+            border-color: rgba(111, 36, 166, 0.25);
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 44pt;
+            margin-bottom: 14px;
+            display: block;
+            line-height: 1;
+        }
+
+        .card-title {
+            font-family: THSarabunBold;
+            font-size: 19pt;
+            color: #2d1b3d;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            font-size: 14pt;
+            color: #6b6b80;
+            line-height: 1.5;
+        }
+
+        /* สีต่างกันตามประเภท */
+        .card-purple  { --card-accent: linear-gradient(90deg, #6f24a6, #9b4fb3); }
+        .card-blue    { --card-accent: linear-gradient(90deg, #1565c0, #42a5f5); }
+        .card-green   { --card-accent: linear-gradient(90deg, #2e7d32, #66bb6a); }
+        .card-orange  { --card-accent: linear-gradient(90deg, #e65100, #ffa726); }
+        .card-red     { --card-accent: linear-gradient(90deg, #b71c1c, #ef5350); }
+
+        .card-purple:hover .card-icon { filter: drop-shadow(0 4px 8px rgba(111,36,166,0.4)); }
+        .card-blue:hover   .card-icon { filter: drop-shadow(0 4px 8px rgba(21,101,192,0.4)); }
+        .card-green:hover  .card-icon { filter: drop-shadow(0 4px 8px rgba(46,125,50,0.4)); }
+        .card-orange:hover .card-icon { filter: drop-shadow(0 4px 8px rgba(230,81,0,0.4)); }
+        .card-red:hover    .card-icon { filter: drop-shadow(0 4px 8px rgba(183,28,28,0.4)); }
+
+        /* ===== SECTION LABEL ===== */
+        .section-label {
+            width: 100%;
+            max-width: 900px;
+            font-family: THSarabunBold;
+            font-size: 16pt;
+            color: #6f24a6;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(111, 36, 166, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 20px;
+            background: linear-gradient(180deg, #6f24a6, #9b4fb3);
+            border-radius: 3px;
+        }
+
+        /* ===== LOGOUT ===== */
+        .logout-wrap {
+            margin-top: 36px;
+        }
+
+        .btn-logout {
+            background: none;
+            border: 1.5px solid rgba(111, 36, 166, 0.25);
+            color: #6b6b80;
+            padding: 9px 24px;
+            border-radius: 999px;
+            font-size: 14pt;
+            font-family: THSarabun;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-logout:hover {
+            background: rgba(183, 28, 28, 0.07);
+            border-color: rgba(183, 28, 28, 0.3);
+            color: #b71c1c;
+        }
+
+        @media (max-width: 600px) {
+            .category-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+            .category-card {
+                padding: 22px 14px;
+            }
+            .card-icon { font-size: 32pt; }
+            .card-title { font-size: 16pt; }
+            .card-desc { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="select-page">
+
+    <!-- Header -->
+    <div class="select-header">
+        <img src="{{ url_for('static', filename='logo.jpg') }}" alt="logo">
+        <div class="org-name">การไฟฟ้าส่วนภูมิภาค</div>
+        <div class="page-title">ระบบหนังสือราชการ</div>
+        <div class="user-greeting">ยินดีต้อนรับ คุณ{{ username }} — เลือกประเภทเอกสารที่ต้องการ</div>
+    </div>
+
+    <!-- Section: จัดซื้อจัดจ้าง -->
+    <div class="section-label">📋 จัดซื้อจัดจ้าง</div>
+
+    <div class="category-grid">
+
+     
+        <a href="/spec-page-1" class="category-card card-blue">
+            <span class="card-icon">📝</span>
+            <div class="card-title">1.หนังสือขอความเห็นชอบดำเนินการตัดหญ้า</div>
+           <div class="card-desc">มอบหมายผู้จัดทำรายละเอียด<br>คุณลักษณะเฉพาะและราคากลาง</div>
+        </a>
+
+        <a href="/spec-page-2" class="category-card card-green">
+            <span class="card-icon">📊</span>
+            <div class="card-title">2.มอบหมายผู้จัดทำรายละเอียดคุณลักษณะเฉพาะ</div>
+            <div class="card-desc">รายงานและสรุปผล<br>การจัดซื้อจัดจ้าง</div>
+        </a>
+
+        <a href="/spec-page-3" class="category-card card-black">
+            <span class="card-icon">🌿</span>
+            <div class="card-title">3.รายงานขอจัดจ้างตัดหญ้าและฉีดยา ททร.1(1)แผนก</div>
+            <div class="card-desc">เงื่อนไขคุณสมบัติของผู้เสนอราคา</div>
+        </a>
+
+        <a href="/spec-page-4" class="category-card card-blue">
+            <span class="card-icon">🛠️</span>
+            <div class="card-title">4.รายงาน ใบสั่งจ้างตัดหญ้า หน่วย พค 68 แบบแผน</div>
+            <div class="card-desc">รายละเอียดและเงื่อนไขการจ้างงาน</div>
+        </a>
+
+        <a href="/spec-page-5" class="category-card card-red">
+            <span class="card-icon">💵</span>
+            <div class="card-title">5.จ่ายรายงวด ขออนุมัติจ่ายเงินค่าจ้างทำความสะอาด</div>
+            <div class="card-desc">อนุมัติจ่ายเงินจ้างทำความสะอาด</div>
+        </a>
+
+    </div>
+
+    <!-- Logout -->
+    <div class="logout-wrap">
+        <a href="/logout" class="btn-logout">🚪 ออกจากระบบ</a>
+    </div>
+
+</div>
+
+</body>
+</html>

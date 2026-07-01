@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='main.js') }}" defer></script>
+    <title>หนังสือราชการ</title>
+</head>
+<body>
+
+<div class="menu">
+    <a href="/main"><button>หน้าแรก</button></a>
+    <a href="/edit-form?page=main"><button>📝 แบบฟอร์มแก้ไขข้อมูล</button></a>
+    <a href="/spec-page-1"><button>จัดซื้อจัดจ้าง</button></a>
+    <a href="/report"><button>รายงานจัดซื้อจัดจ้าง</button></a>
+</div>
+
+<div class="topbar">
+    <a href="/select" class="btn-back">← เลือกประเภทเอกสาร</a>
+    <div class="topbar-right">
+        <button onclick="window.print()">🖨 พิมพ์ PDF</button>
+    </div>
+</div>
+
+<div class="a4">
+
+    <img src="{{ url_for('static', filename='logo.jpg') }}" class="logo">
+
+    <div class="row mt10">
+        <div class="left">จาก&nbsp;&nbsp;&nbsp;{{ data.from }}</div>
+        <div class="right">ถึง&nbsp;&nbsp;&nbsp;{{ data.to }}</div>
+    </div>
+
+    <div class="row mt5">
+        <div class="left">เลขที่&nbsp;&nbsp;&nbsp;{{ data.number }}</div>
+        <div class="right">วันที่&nbsp;&nbsp;&nbsp;{{ data.date }}</div>
+    </div>
+
+    <div class="topic mt12">
+        <span class="topic-label">เรื่อง</span>
+        <span class="topic-text">{{ data.subject }}</span>
+    </div>
+
+    <div class="receiver mt12">
+        เรียน&nbsp;&nbsp;&nbsp;{{ data.receiver }}
+    </div>
+
+    <div class="section-title mt18">1. ข้อมูล</div>
+    <div class="paragraph">{{ data.section1 }}</div>
+
+    <div class="section-title mt12">2. ข้อพิจารณา</div>
+    <div class="paragraph">{{ data.section2 }}</div>
+
+    <div class="paragraph mt8">{{ data.closing }}</div>
+
+    <div class="sign-right">
+        <div>{{ data.signature_from }}</div>
+        <div>{{ data.position_from }}</div>
+    </div>
+
+    <div class="approve">{{ data.approve }}</div>
+
+    <div class="sign-left">
+        <div>{{ data.signature_approve }}</div>
+        <div class="position-under">{{ data.position_approve }}</div>
+    </div>
+
+</div>
+
+</body>
+</html>
